@@ -1,7 +1,7 @@
 {
   "name": "School Manager",
   "short_name": "School support",
-  "start_url": "/Manage_school/",
+  "start_url": "/School_Manager/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#4CAF50",
