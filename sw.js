@@ -1,58 +1,46 @@
-const cacheName = 'school support'; 
-const assets = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/dexie.js',
-  '/chart.js',
-  '/icon2.png'
-  
-  // Add icon here only if it physically exists in the folder
+const CACHE_NAME = 'biz-registry-v1';
+const ASSETS_TO_CACHE = [
+  './',
+  './index.html',
+  './manifest.json'
 ];
 
-self.addEventListener('install', evt => {
-  evt.waitUntil(
-    caches.open(cacheName).then(cache => {
-      // We use a map to catch errors so one missing file doesn't break the app
-      return Promise.allSettled(assets.map(url => cache.add(url)));
+// 1. Install Event: Save the UI shell to the cache
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      console.log('SW: Caching App Shell');
+      return cache.addAll(ASSETS_TO_CACHE);
     })
   );
+  // Forces the waiting service worker to become the active service worker.
   self.skipWaiting();
 });
 
-self.addEventListener('activate', evt => {
-  evt.waitUntil(
-    caches.keys().then(keys => {
+// 2. Activate Event: Clean up old versions of the cache
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
       return Promise.all(
-        keys.filter(key => key !== cacheName).map(key => caches.delete(key))
+        cacheNames.map((cache) => {
+          if (cache !== CACHE_NAME) {
+            console.log('SW: Clearing Old Cache');
+            return caches.delete(cache);
+          }
+        })
       );
     })
   );
   return self.clients.claim();
 });
 
-self.addEventListener('fetch', evt => {
-  // Only handle standard GET requests
-  if (evt.request.method !== 'GET') return;
-
-  evt.respondWith(
-    caches.open(cacheName).then(cache => {
-      return cache.match(evt.request).then(cachedRes => {
-        const fetchPromise = fetch(evt.request).then(networkRes => {
-          // Update the cache with the fresh version for NEXT time
-          if (networkRes.ok) {
-            cache.put(evt.request, networkRes.clone());
-          }
-          return networkRes;
-        }).catch(() => {
-            // If network fails and no cache, this prevents a crash
-            return cachedRes; 
-        });
-
-        // Return the cached version immediately (fast), or wait for network
-        return cachedRes || fetchPromise;
-      });
+// 3. Fetch Event: Cache-First Strategy
+// This ensures the app loads instantly from cache, even without internet.
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    caches.match(event.request).then((cachedResponse) => {
+      // Return the cached version if it exists, otherwise fetch from network
+      return cachedResponse || fetch(event.request);
     })
   );
 });
-      
