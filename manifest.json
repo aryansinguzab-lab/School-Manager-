@@ -1,7 +1,7 @@
 {
   "name": "Business Registry Secure Pro",
   "short_name": "Image Saver",
-  "start_url": "./index.html",
+  "start_url": "./Index.html",
   "display": "standalone",
   "background_color": "#121212",
   "theme_color": "#4a90e2",
