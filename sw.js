@@ -4,6 +4,7 @@ const ASSETS_TO_CACHE = [
   './Index.html',
   './manifest.json'
   './icon2.png'
+  './index.js'
 ];
 
 // 1. Install Event: Save the UI shell to the cache
