@@ -1,800 +1,358 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>School Proprietor Manager</title>
-    <link rel="manifest" href="manifest.json" crossorigin="use-credentials">
-    <script src="dexie.js"></script>
+    <title>Business Registry - Secure Pro</title>
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#121212">
+<link rel="apple-touch-icon" href="icon-192.png">
+  <script src="dexie.js"></script>
     <style>
-        :root { --bg: #f5f5f5; --card: #fff; --text: #333; --border: #ccc; --li: #eee; --primary: #1a237e; --accent: #2196F3; --warn: #FF9800; --secret: #673AB7; }
-        [data-theme="dark"] { --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; --border: #333; --li: #2d2d2d; --primary: #3949ab; --accent: #64b5f6; }
-        body{font-family:'Segoe UI', Arial, sans-serif; background:var(--bg); color:var(--text); padding:10px; margin:0; transition: 0.3s;}
-        .status-btn { border: none; border-radius: 20px; padding: 4px 12px; cursor: pointer; font-weight: bold; font-size: 0.75em; }
-        .status-btn.pending { background: #FF9800; color: white; }
-        .status-btn.completed { background: #4CAF50; color: white; }
-        .status-btn.failed { background: #f44336; color: white; }
-        .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 10px; }
-        #topBar{margin-bottom:15px; background:var(--card); padding:15px; border-radius:12px; border: 1px solid var(--border);}
-        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin-bottom: 20px; padding: 15px; border: 2px solid var(--border); border-radius: 16px; background: rgba(0,0,0,0.02); }
-        .action-card { background: var(--card); padding: 15px 5px; border-radius: 12px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: pointer; border: 1px solid var(--border); transition: 0.2s; }
-        .action-card:active { transform: scale(0.95); background: var(--li); }
-        .view-screen { display: none; background:var(--bg); min-height: 100vh; }
-        section{background:var(--card); padding:15px; border-radius:12px; border: 1px solid var(--border); margin-top: 10px;}
-        button{cursor:pointer; background:var(--primary); color:white; border:none; font-weight:bold; padding:12px; border-radius:8px; width:100%; margin: 5px 0;}
-        .back-btn { background: #CD5C5C; margin-bottom: 15px; }
-        input, select, textarea { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); box-sizing: border-box; font-size: 16px; }
-        table{width:100%; border-collapse:collapse; margin-top:10px; font-size: 0.85em;}
-        th,td{border:1px solid var(--border); padding:10px; text-align:center}
-        th{background:var(--primary); color:#fff}
-        .summary-box { display: flex; justify-content: space-around; background: var(--li); padding: 15px; border-radius: 8px; margin-bottom: 15px; font-weight: bold; border: 1px solid var(--border); }
- 
-/* Update the Login Screen Z-Index */
-#login {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: var(--bg);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 9000; /* Lower than the Alert */
-}
+        body { font-family: sans-serif; margin: 0; padding: 0; background: #121212; color: #e0e0e0; user-select: none; -webkit-user-select: none; }
+        .screen { display: none; min-height: 100vh; padding: 20px; box-sizing: border-box; padding-bottom: 80px; }
+        .active-screen { display: block; }
+        .box { max-width: 450px; margin: auto; background: #1e1e1e; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); border: 1px solid #333; }
+        
+        h2, h3 { color: #a0cfff; margin-top: 0; text-align: center; }
+        .stats { text-align: center; font-size: 14px; color: #888; margin-bottom: 20px; background: #252525; padding: 10px; border-radius: 8px; border: 1px solid #333; }
+        
+        video { width: 100%; border-radius: 8px; background: #000; margin-bottom: 10px; min-height: 250px; border: 1px solid #444; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #444; border-radius: 6px; box-sizing: border-box; background: #2c2c2c; color: white; font-size: 16px; }
+        
+        button { width: 100%; padding: 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-bottom: 12px; transition: 0.2s; font-size: 14px; }
+        button:active { transform: scale(0.96); }
+        
+        .btn-blue { background: #4a90e2; color: white; }
+        .btn-gray { background: #444; color: white; }
+        .btn-green { background: #2e7d32; color: white; }
+        .btn-red { background: #b71c1c; color: white; }
+        .btn-back { background: #333; color: #a0cfff; border: 1px solid #444; margin-bottom: 20px; width: auto; padding: 10px 20px; }
+        
+        #galleryGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
+        .gallery-item { width: 100%; aspect-ratio: 1; border-radius: 8px; object-fit: cover; border: 1px solid #444; cursor: pointer; }
+        
+        .viewer-container { margin-top: 20px; padding: 15px; background: #252525; border-radius: 8px; text-align: center; border: 1px solid #333; }
+        .view-img { width: 100%; border-radius: 6px; margin-top: 10px; margin-bottom: 15px; }
 
-/* Update the Custom Alert Modal Z-Index */
-#customAlertModal {
-    display: none; 
-    position: fixed; 
-    top: 0; 
-    left: 0; 
-    width: 100%; 
-    height: 100%; 
-    background: rgba(0,0,0,0.7); 
-    align-items: center; 
-    justify-content: center; 
-    z-index: 1000000 !important; /* The King of the Hill - nothing goes above this */
-    backdrop-filter: blur(4px);
-}
+        #optionsMenu { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 5000; flex-direction: column; justify-content: center; align-items: center; }
+        .menu-box { width: 85%; max-width: 320px; background: #2c2c2c; padding: 25px; border-radius: 15px; border: 1px solid #4a90e2; text-align: center; }
 
+        #customAlert { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 6000; justify-content: center; align-items: center; }
+        .alert-content { background: #2c2c2c; padding: 25px; border-radius: 15px; width: 85%; max-width: 320px; text-align: center; border: 1px solid #a0cfff; }
 
+        #lockScreen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #121212; z-index: 9999; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; box-sizing: border-box; }
 
-        .modal{position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:none; justify-content:center; align-items:center; z-index:1000}
-        .modalContent{background:var(--card); padding:20px; border-radius:15px; width:95%; max-width:450px; box-sizing: border-box; overflow-y: auto; max-height: 90vh;}
-        .pass-container { position: relative; width: 100%; }
-        .toggle-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--accent); width: auto; padding: 5px; cursor: pointer; }
-        .backup-zone { background: var(--li); padding: 10px; border-radius: 8px; border: 1px dashed var(--border); margin-top: 15px; }
-        .budget-warning { background: #fff3cd; color: #856404; padding: 15px; border-left: 5px solid #ffeeba; border-radius: 8px; margin: 15px 0; font-size: 0.9em; line-height: 1.4; animation: pulse-border 2s infinite; }
-        @keyframes pulse-border { 0% { border-left-color: #ffeeba; } 50% { border-left-color: #f44336; } 100% { border-left-color: #ffeeba; } }
-        #trialBadge { background: var(--warn); color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.75em; font-weight: bold; position: absolute; top: 10px; right: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 100; }
-        #expiryLock { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(18, 18, 18, 0.98); z-index: 10000; display: none; flex-direction: column; justify-content: center; align-items: center; color: white; text-align: center; backdrop-filter: blur(5px); }
-        .lock-card { background: #2d2d2d; padding: 30px; border-radius: 15px; border: 1px solid #444; box-shadow: 0 10px 40px rgba(0,0,0,0.5); max-width: 350px; width: 90%; }
-        .secret-item { background: var(--li); padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--border); position: relative; }
+        .legal-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: #000; color: #a0cfff; padding: 10px 0; font-size: 12px; font-weight: bold; border-top: 1px solid #444; z-index: 3000; }
     </style>
 </head>
-<body>
-    <div id="customAlertModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); align-items:center; justify-content:center; z-index:99999; backdrop-filter: blur(4px);">
-    <div style="background:var(--card); padding:25px; border-radius:15px; width:90%; max-width:350px; text-align:center; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-        <h3 id="alertTitle" style="margin-top:0;">Notice</h3>
-        <p id="alertMessage" style="margin-bottom:20px; line-height:1.5; color:var(--text);"></p>
-        <div id="alertActionButtons" style="display:flex; gap:12px;">
-            </div>
+<body oncontextmenu="return false;">
+
+<div id="lockScreen">
+    <h2 style="color: #ff5252;">SUBSCRIPTION EXPIRED</h2>
+    <p>Please enter this month's activation key.</p>
+    <p style="font-size: 12px; color: #888;"> WhatsApp the developer for the code at +256754010923</p>
+    <input type="text" id="monthKeyInput"  style="text-align: center; text-transform: uppercase;">
+    <button class="btn-blue" onclick="validateMonthKey()">Activate Access</button>
+</div>
+
+<div id="optionsMenu">
+    <div class="menu-box">
+        <h3 id="menuTitle">Options</h3>
+        <button class="btn-blue" id="optRename">✏️ Rename</button>
+        <button class="btn-blue" id="optDownload">📥 Download</button>
+        <button class="btn-green" id="optShare">📤 Share</button>
+        <button class="btn-red" id="optDelete">🗑️ Delete</button>
+        <button class="btn-gray" id="optClose">❌ Close</button>
     </div>
 </div>
 
-<div id="login">
-    <section style="width: 300px; text-align: center; border:none;">
-        <h2 style="margin-bottom:20px; color:var(--primary);">SCHOOL SUPPORT SYSTEM</h2>
-        <div class="pass-container">
-            <input id="loginPass" type="password" placeholder="Access Code" autofocus>
-            <button type="button" class="toggle-btn" onclick="togglePassword('loginPass')">👁️</button>
+<div id="customAlert">
+    <div class="alert-content">
+        <p id="alertMsg"></p>
+        <div id="customInputArea" style="display:none;"><input type="text" id="uiTextInput"></div>
+        <div id="uiButtons"><button class="btn-blue" id="alertBtn">OK</button></div>
+        <div id="confirmGroup" style="display:none; gap:10px;">
+            <button class="btn-blue" id="confirmYes">Confirm</button>
+            <button class="btn-gray" id="confirmNo">Cancel</button>
         </div>
-        <button onclick="doLogin()" style="background:var(--accent)">Access System</button>
-    </section>
-</div>
-
-<div id="secretAuth" class="view-screen">
-    <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; background: var(--bg);">
-        
-        <div style="width: 100%; max-width: 350px; text-align: center;">
-            <div style="font-size: 3em; margin-bottom: 10px;">🔐</div>
-            <h2 style="color:var(--secret); margin-bottom: 5px;">SECRETS CORNER</h2>
-            <p style="font-size:0.9em; color:gray; margin-bottom: 25px;">Identification Required: Enter your system master code to access the vault.</p>
-            
-            <div class="pass-container" style="margin-bottom: 15px;">
-                <input id="secretPass" type="password" placeholder="Confirm Password" 
-                       style="border: 2px solid var(--secret); text-align: center; font-size: 1.2em; letter-spacing: 4px;">
-                <button type="button" class="toggle-btn" onclick="togglePassword('secretPass')">👁️</button>
-            </div>
-            
-            <button onclick="accessSecrets()" style="background:var(--secret); padding: 15px; font-size: 1.1em; box-shadow: 0 4px 10px rgba(103, 58, 183, 0.3);">Unlock Secrets</button>
-            
-            <button onclick="closeSecretAuth()" style="background:none; color: gray; text-decoration: underline; margin-top: 15px; border:none; width: auto;">
-                Return to Dashboard
-            </button>
-        </div>
-        
     </div>
 </div>
 
-
-<div id="app" style="display:none">
-    <div id="mainDashboard" class="view-screen" style="display:block">
-        <div id="topBar">
-            <div class="top-row">
-                <button onclick="toggleTheme()" style="width:auto; background:var(--accent); padding:8px 15px; margin:0;">🌓 Theme</button>
-                <div style="text-align: center;">
-                <strong id="dispName" style="font-size: 1.1em; color:var(--primary);">School Proprietor Manager</strong>
-            </div><button onclick="doLogout()" style="width:auto; background:#CD5C5C; padding:8px 15px; margin:0;">Exit</button>
-            </div>
-        </div>
- <h2 style="color:var(--accent);text-align: center; margin-bottom: 5px;">RECORDING GEARS</h2>
-        
-        <div class="dashboard-grid">
-            <div class="action-card" onclick="openEntryModal('income')" style="border-top: 4px solid #4CAF50;"><b>Fees & Inflows</b></div>
-            <div class="action-card" onclick="openEntryModal('expense')" style="border-top: 4px solid #f44336;"><b> School expenses</b></div>
-            <div class="action-card" onclick="openTaskModal()" style="border-top: 4px solid #2196F3;">Administrative To-do</div>
-            <div class="action-card" onclick="openTargetModal()" style="border-top: 4px solid #2196F3;">Annual Targets</div>
-            
-          
-        </div>
-
-         <h2 style="color:var(--accent);text-align: center; margin-bottom: 5px;">FINANCIAL SUMMARY</h2>
-        <div class="summary-box">
-            <div style="color:green;">Fees: <span id="totalInc">0</span></div>
-            <div style="color:red;">Costs: <span id="totalExp">0</span></div>
-            <div style="border-left: 2px solid var(--border); padding-left: 10px;">Surplus: <span id="totalBal">0</span></div>
-        </div>
-            
-         <h2 style="color:var(--accent);text-align: center; margin-bottom: 5px;">VIEW RECORDS</h2>
-        <div class="dashboard-grid"> 
-           <div onclick="switchView('cashView')" class="action-card" style="border-top: 4px solid #2196F3;">General Ledger</div>
-           
-           
-           <div onclick="showSecretAuth()" class="action-card" style="border-top: 4px solid var(--secret); color:var(--secret);"><b>🔐 Secrets Corner</b></div>
-           <div onclick="switchView('taskView')" class="action-card" style="border-top: 4px solid #2196F3;">Admin Tasks</div>
-           <div onclick="switchView('targetView')" class="action-card" style="border-top: 4px solid #2196F3;">School Targets</div>
-        </div> 
-        <div class="action-card" onclick="openModal('settingsModal')" style="border-top: 4px solid #607D8B;"><b>⚙️ Settings</b></div>
-    </div>
-
-    <div id="secretsView" class="view-screen">
-    <div style="position: sticky; top: 0; background: var(--bg); z-index: 100; padding-bottom: 10px; border-bottom: 2px solid var(--secret);">
-        <button class="back-btn" onclick="switchView('mainDashboard')" style="margin-bottom:10px;">Back to Dashboard</button>
-        
-        <section style="margin:0; border-radius: 0 0 12px 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-            <h3 style="color:var(--secret); margin-top:0;">🔐 Add New Secret</h3>
-            <div style="display: flex; flex-direction: column; gap: 5px;">
-                <input id="secLabel" placeholder="Label">
-                <div style="display: flex; gap: 5px;">
-                    <input id="secValue" type="text" placeholder="Password or Value" style="margin:0;">
-                    <button onclick="saveSecret()" style="background:var(--secret); margin:0; width: 40%;">Add</button>
-                </div>
-            </div>
-        </section>
-    </div>
-
-    <section style="margin-top: 15px;">
-        <h4 style="color:var(--text); opacity: 0.7;">Stored Keys</h4>
-        <p style="font-size:0.75em; color:gray; margin-bottom:15px;">Your sensitive keys are encrypted locally.</p>
-        <div id="secretList"></div>
-    </section>
-</div>
-
-
-    <div id="cashView" class="view-screen">
-        <div style="position: sticky; top: 0; background: inherit; z-index: 100; padding: 10px; border-bottom: 2px solid var(--border);">
-            <button class="back-btn" onclick="switchView('mainDashboard')">Back to Dashboard</button>
-            <h3 style="margin: 10px 0;">School Ledger</h3>
-            
-            <div style="display: flex; gap: 5px;">
-    <select id="filterMonth" onchange="renderCashBook()">
-        <option value="all">All Months</option>
-        <option value="0">Jan</option>
-        <option value="1">Feb</option>
-        <option value="2">Mar</option>
-        <option value="3">Apr</option>
-        <option value="4">May</option>
-        <option value="5">Jun</option>
-        <option value="6">Jul</option>
-        <option value="7">Aug</option>
-        <option value="8">Sep</option>
-        <option value="9">Oct</option>
-        <option value="10">Nov</option>
-        <option value="11">Dec</option>
-    </select>
-    <select id="filterYear" onchange="renderCashBook()"></select>
-</div>
-
-        </div>
-        <table style="width: 100%;">
-            <thead><tr><th>Date</th><th>Particulars</th><th>Acc</th><th>Amt</th><th>✖</th></tr></thead>
-            <tbody id="cashRows"></tbody>
-        </table>
-    </div>
-
-   
-    <div class="modal" id="entryModal"><div class="modalContent">
-        <h3 id="entryTitle">Add Record</h3>
-        <input id="entDesc" placeholder="Decription">
-        <input id="entAmt" type="number" placeholder="Amount">
-        <select id="entCat">
-            <optgroup label="Revenue"><option value="Income">Fees/Revenue</option></optgroup>
-            <optgroup label="Operations"><option value="Necessity">School expenses</option></optgroup></select>
-        <select id="entAcc"><option value="Cash">💵 Cash</option><option value="Bank">🏦 Bank</option><option value="MTN">🟡 MTN</option><option value="Airtel">🔴 Airtel</option></select>
-        <input type="hidden" id="entType"><button onclick="submitEntry()"style="background:var(--accent)">Save</button><button onclick="closeModal('entryModal')" style="background:grey">Cancel</button>
-    </div></div>
-
-    
-
-    <div id="taskView" class="view-screen"><button class="back-btn" onclick="switchView('mainDashboard')">Back</button><section><ul id="taskList"></ul></section></div>
-    <div id="targetView" class="view-screen"><button class="back-btn" onclick="switchView('mainDashboard')">Back</button><section><ul id="targetList"></ul></section></div>
-
-    <div class="modal" id="taskModal">
-    <div class="modalContent">
-        <h3 style="color:var(--primary); margin-top:0;">📝 New Admin Task</h3>
-        
-        <label style="font-size: 0.8em; font-weight: bold; display: block; margin-top: 10px;">Task Description:</label>
-        <input id="taskInTitle">
-        
-        <label style="font-size: 0.8em; font-weight: bold; display: block; margin-top: 10px;">Set Due Date & Time:</label>
-        <input type="datetime-local" id="taskInDue">
-        
-        <label style="font-size: 0.8em; font-weight: bold; display: block; margin-top: 10px;">Additional Notes:</label>
-        <textarea id="taskInNotes" placeholder="Enter details here..." style="height: 80px;"></textarea>
-        
-        <button onclick="submitTask()" style="background:var(--accent)">Save Task</button>
-        <button onclick="closeModal('taskModal')" style="background:grey">Cancel</button>
+<div id="scrMain" class="screen active-screen">
+    <div class="box">
+        <h2>Business Registry</h2>
+        <div class="stats" id="dbCount">Records: 0</div>
+        <button class="btn-blue" onclick="showScreen('scrCamera')">📸 Camera Capture</button>
+        <button class="btn-green" onclick="showScreen('scrUpload')">📁 Upload Image</button>
+        <button class="btn-gray" onclick="showScreen('scrSearch')">🔍 Search Records</button>
+        <button class="btn-gray" onclick="showScreen('scrGallery')">🖼️ View Gallery</button>
+        <button class="btn-gray" onclick="showScreen('scrAdmin')">⚙️ Settings</button>
     </div>
 </div>
 
-<div class="modal" id="targetModal">
-    <div class="modalContent">
-        <h3 style="color:var(--primary); margin-top:0;">🎯 New School Target</h3>
-        
-        <label style="font-size: 0.8em; font-weight: bold; display: block; margin-top: 10px;">Target Objective:</label>
-        <input id="targetInTitle">
-        
-        <label style="font-size: 0.8em; font-weight: bold; display: block; margin-top: 10px;">Target Deadline:</label>
-        <input id="targetInDue" type="date">
-        
-        <button onclick="submitTarget()" style="background:var(--accent)">Add Target</button>
-        <button onclick="closeModal('targetModal')" style="background:grey">Cancel</button>
+<div id="scrCamera" class="screen">
+    <button class="btn-back" onclick="showScreen('scrMain')">← Back</button>
+    <div class="box">
+        <h3>Camera Capture</h3>
+        <input type="text" id="camName" placeholder="Full Name & details">
+        <video id="v" autoplay playsinline muted></video>
+        <button class="btn-blue" onclick="startCamera()">Start Camera</button>
+        <button class="btn-green" id="btnCaptureSave">Capture & Save</button>
     </div>
 </div>
 
-    <div class="modal" id="settingsModal"><div class="modalContent">
-        <h3>Settings</h3><input id="setBizName" placeholder="School Name"><input id="newPass" type="password" placeholder="New Code">
-        <button onclick="saveSettings()"style="background:var(--accent)">Save</button>
-        <div class="backup-zone"><button onclick="exportData()">💾 Backup</button><input type="file" id="importFile"><button onclick="importData()">📥 Restore</button></div>
-        <button onclick="closeModal('settingsModal')" style="background:grey">Close</button>
-    </div></div>
-    
- 
-
-<div id="expiryLock">
-    <div class="lock-card"><h2>System Lock ⏳</h2><p>Trial Expired. Contact 0754010923</p><strong id="userRequestID"></strong><input type="password" id="unlockCodeInput"><button onclick="checkUnlockCode()">Activate</button></div>
+<div id="scrUpload" class="screen">
+    <button class="btn-back" onclick="showScreen('scrMain')">← Back</button>
+    <div class="box">
+        <h3>Upload Record</h3>
+        <input type="text" id="upName" placeholder="Full Name & details">
+        <input type="file" id="filePicker" accept="image/*" style="display:none">
+        <button class="btn-green" onclick="document.getElementById('filePicker').click()">Pick Image</button>
+        <p id="upFileName" style="text-align:center; font-size:12px; color:#888;"></p>
+        <button class="btn-blue" id="btnSaveUpload" style="display:none;">Save Upload</button>
+    </div>
 </div>
-<div id="trialBadge">Trial: <span id="daysLeft">--</span> days left</div>
+
+<div id="scrSearch" class="screen">
+    <button class="btn-back" onclick="showScreen('scrMain')">← Back</button>
+    <div class="box">
+        <h3>Search</h3>
+        <input type="text" id="searchQuery" list="nameList" placeholder="Search name...">
+        <datalist id="nameList"></datalist>
+        <button class="btn-blue" id="btnSearch">Find Record</button>
+        <div id="searchResult" class="viewer-container" style="display:none;"></div>
+    </div>
+</div>
+
+<div id="scrGallery" class="screen">
+    <button class="btn-back" onclick="showScreen('scrMain')">← Back</button>
+    <div class="box">
+        <h3>Gallery</h3>
+        <div id="galleryGrid"></div>
+        <div id="galleryViewer" class="viewer-container" style="display:none;"></div>
+    </div>
+</div>
+
+<div id="scrAdmin" class="screen">
+    <button class="btn-back" onclick="showScreen('scrMain')">← Back</button>
+    <div class="box">
+        <h3>Admin Tools</h3>
+        <button class="btn-gray" id="btnExport">Export Data (JSON)</button>
+        <button class="btn-gray" onclick="document.getElementById('fileImport').click()">Combine Data</button>
+        <input type="file" id="fileImport" style="display:none" accept=".json">
+    </div>
+</div>
+
+<div class="legal-footer">
+    <marquee></marquee>
+</div>
 
 <script>
-const db = new Dexie("SchoolManagerFullV2");
-db.version(2).stores({
-    entries: '++id, d, t',
-    targets: '++id, status',
-    tasks: '++id, dueDate',
-    debts: '++id, name, type, balance',
-    secrets: '++id, label',
-    config: 'key',
-    settings: 'key, value'
-});
+    let db, activeRecord = null, uploadedData = null;
 
-const TRIAL_DAYS = 7;
-const ACTIVATION_CODE = "LOSCA-2p0r2o6";
-let settings = {name:"School Proprietor Manager"};
-let security = {p:""};
-let budgetChart = null;
-
-// INIT
-async function initApp() {
-    await db.open();
-    const [s, sec] = await Promise.all([db.config.get('settings'), db.config.get('security')]);
-    if(s && s.val) settings = s.val;
-    if(sec && sec.val) security = sec.val;
-    
-    const yearSel = document.getElementById('filterYear');
-    if(yearSel) {
-        for(let i=2026; i<=2070; i++) yearSel.options.add(new Option(i, i, i===new Date().getFullYear()));
+    // --- SHORT KEY PERPETUAL LOGIC ---
+    function getExpectedKey() {
+        const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+        const d = new Date();
+        const shortMonth = months[d.getMonth()];
+        const shortYear = d.getFullYear().toString().substr(-2); // Gets '26' or '27'
+        return shortMonth + shortYear; // e.g., "FEB26"
     }
-    
-    handleTrialSystem();
-    applySettingsUI();
-    renderCashBook();
-}
 
-async function doLogin() {
-    const loginInput = document.getElementById("loginPass");
-    const enteredPass = loginInput.value;
-    
-    try {
-        // Fetch security from DB
-        const sec = await db.config.get('security');
-        // If no password exists yet, the master password is empty (just click Access)
-        const correctPass = (sec && sec.val && sec.val.p) ? sec.val.p : "";
-
-        if (enteredPass === correctPass) {
-            document.getElementById("login").style.display = "none";
-            document.getElementById("app").style.display = "block";
-            // Clear password for security
-            loginInput.value = "";
-        } else {
-            // Trigger the alert
-            showAlert("❌ Access Denied: Incorrect Password.");
-            loginInput.value = ""; // Clear the wrong password
-            loginInput.focus();    // Put cursor back
+    function checkSubscription() {
+        const expected = getExpectedKey();
+        const saved = localStorage.getItem("monthly_active_key");
+        if (saved !== expected) {
+            document.getElementById('lockScreen').style.display = 'flex';
         }
-    } catch (err) {
-        console.error("Login Error:", err);
-        showAlert("Database Error. Please refresh.");
     }
-}
 
+    function validateMonthKey() {
+        const input = document.getElementById('monthKeyInput').value.trim().toUpperCase();
+        const expected = getExpectedKey();
+        if (input === expected) {
+            localStorage.setItem("monthly_active_key", input);
+            document.getElementById('lockScreen').style.display = 'none';
+            showUI("Success: Access Granted for " + expected);
+        } else {
+            showUI("Invalid Key. Contact +256764010923");
+        }
+    }
 
-function showSecretAuth() { document.getElementById('secretAuth').style.display = 'flex'; }
-function closeSecretAuth() { document.getElementById('secretAuth').style.display = 'none'; }
+    window.onload = checkSubscription;
 
-function accessSecrets() {
-    if(document.getElementById('secretPass').value === security.p) {
-        closeSecretAuth();
-        switchView('secretsView');
-        renderSecrets();
-    } else { showAlert("Wrong Master Code"); }
-}
+    // --- NAVIGATION ---
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
+        document.getElementById(id).classList.add('active-screen');
+        if(id === 'scrGallery') {
+            document.getElementById('galleryViewer').style.display = "none";
+            document.getElementById('galleryGrid').style.display = "grid";
+            loadGallery();
+        }
+        if(id !== 'scrCamera') stopCamera();
+    }
 
-// SECRETS LOGIC
-async function saveSecret() {
-    const label = document.getElementById('secLabel').value;
-    const val = document.getElementById('secValue').value;
-    if(!label || !val) return;
-    await db.secrets.add({ label, value: val });
-    document.getElementById('secLabel').value = '';
-    document.getElementById('secValue').value = '';
-    renderSecrets();
-}
+    // --- CUSTOM UI (NO PASSWORDS) ---
+    function showUI(msg, mode = 'alert') {
+        return new Promise((resolve) => {
+            const ui = document.getElementById('customAlert');
+            document.getElementById('alertMsg').innerText = msg;
+            document.getElementById('customInputArea').style.display = (mode === 'prompt') ? "block" : "none";
+            document.getElementById('uiButtons').style.display = (mode === 'alert') ? "block" : "none";
+            document.getElementById('confirmGroup').style.display = (mode !== 'alert') ? "flex" : "none";
+            ui.style.display = "flex";
 
-async function renderSecrets() {
-    const list = await db.secrets.toArray();
-    document.getElementById('secretList').innerHTML = list.map(s => `
-        <div class="secret-item">
-            <b>${s.label}</b><br>
-            <input type="password" value="${s.value}" id="secInput${s.id}" readonly style="padding:5px; border:none; background:transparent; width:80%;">
-            <button onclick="toggleSecVal(${s.id})" style="width:auto; padding:5px; background:var(--accent);">👁️</button>
-            <button onclick="delSecret(${s.id})" style="width:auto; padding:5px; background:red;">🗑️</button>
-        </div>
-    `).join('');
-}
+            document.getElementById('alertBtn').onclick = () => { ui.style.display = "none"; resolve(true); };
+            document.getElementById('confirmNo').onclick = () => { ui.style.display = "none"; resolve(null); };
+            document.getElementById('confirmYes').onclick = () => {
+                const val = (mode === 'prompt') ? document.getElementById('uiTextInput').value : true;
+                ui.style.display = "none";
+                resolve(val);
+            };
+        });
+    }
 
-function toggleSecVal(id) {
-    const el = document.getElementById('secInput'+id);
-    el.type = el.type === 'password' ? 'text' : 'password';
-}
+    // --- DATABASE & ACTIONS ---
+    const request = indexedDB.open("BusinessDB5", 1);
+    request.onupgradeneeded = (e) => {
+        db = e.target.result;
+        if (!db.objectStoreNames.contains("students")) db.createObjectStore("students", { keyPath: "name" });
+    };
+    request.onsuccess = (e) => { db = e.target.result; updateUI(); };
 
-
-
-async function submitEntry() {
-    // 1. Get Elements
-    const descEl = document.getElementById('entDesc');
-    const amtEl = document.getElementById('entAmt');
-    const catEl = document.getElementById('entCat');
-    const accEl = document.getElementById('entAcc');
-    const typeEl = document.getElementById('entType');
-
-    // 2. Validation
-    const d = descEl.value;
-    const a = parseFloat(amtEl.value);
-    const c = catEl.value;
-    const t = typeEl.value;
-    const acc = accEl.value;
-
-    if(!d || !a) return showAlert("Fill fields");
-
-    // 3. Save to Database
-    await db.entries.add({ 
-        desc: d, 
-        a, 
-        cat: c, 
-        t, 
-        account: acc, 
-        d: new Date().toISOString().split('T')[0] 
-    });
-
-    // 4. CLEAR FIELDS (Resetting for next time)
-    descEl.value = '';
-    amtEl.value = '';
-    // Optional: Reset dropdowns to first option
-    catEl.selectedIndex = 0; 
-    accEl.selectedIndex = 0;
-
-    // 5. UI Updates
-    closeModal('entryModal');
-    renderCashBook();
-    showAlert("Saved Successfully");
-}
-
-
-async function renderCashBook() {
-    const body = document.getElementById("cashRows");
-    const m = document.getElementById("filterMonth").value;
-    const y = parseInt(document.getElementById("filterYear").value);
-    const all = await db.entries.toArray();
-    let inc=0, exp=0;
-    body.innerHTML = all.filter(en => {
-        const d = new Date(en.d);
-        return d.getFullYear() === y && (m === 'all' || d.getMonth() === parseInt(m));
-    }).map(en => {
-        en.t === 'income' ? inc += en.a : exp += en.a;
-        return `<tr><td>${en.d}</td><td>${en.desc}</td><td>${en.account}</td><td style="color:${en.t==='income'?'green':'red'}">${en.a.toLocaleString()}</td><td><button onclick="delEntry(${en.id})" style="background:red; padding:2px 8px;">x</button></td></tr>`;
-    }).reverse().join('');
-    document.getElementById("totalInc").innerText = inc.toLocaleString();
-    document.getElementById("totalExp").innerText = exp.toLocaleString();
-    document.getElementById("totalBal").innerText = (inc - exp).toLocaleString();
-}
-
-
-
-// 50-30-20 ANALYSIS
-async function renderBudget() {
-    const entries = await db.entries.toArray();
-    const now = new Date();
-    const monthlyData = entries.filter(e => {
-        const d = new Date(e.d);
-        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-    });
-
-    let totalIncome = 0;
-    let spent = { Necessity: 0, Other: 0, Savings: 0 };
-    monthlyData.forEach(e => {
-        if(e.t === 'income') totalIncome += e.a;
-        else if(spent.hasOwnProperty(e.cat)) spent[e.cat] += e.a;
-    });
-
-    const limits = { Necessity: totalIncome * 0.5, Other: totalIncome * 0.3, Savings: totalIncome * 0.2 };
-    
-    document.getElementById('budgetStatus').innerHTML = `<h4>Income: ${totalIncome.toLocaleString()}</h4>`;
-    if(budgetChart) budgetChart.destroy();
-    budgetChart = new Chart(document.getElementById("budgetChart"), {
-        type: 'doughnut',
-        data: { labels: ['Ops (50%)', 'Expansion (30%)', 'Reserve (20%)'], datasets: [{ data: [spent.Necessity, spent.Other, spent.Savings], backgroundColor: ['#4CAF50', '#2196F3', '#FF9800'] }] }
-    });
-}
-
-// DEBTS
-function showDebtSection(tab) {
-    document.getElementById('createDebtSection').style.display = tab === 'create' ? 'block' : 'none';
-    document.getElementById('settleDebtSection').style.display = tab === 'settle' ? 'block' : 'none';
-    if(tab === 'settle') loadDebtDropdown();
-}
-
-async function loadDebtDropdown() {
-    const active = await db.debts.where('balance').above(0).toArray();
-    const d = document.getElementById('dSelect');
-    d.innerHTML = '<option value="">Choose Person</option>' + active.map(i => `<option value="${i.id}">${i.name}</option>`).join('');
-}
-
-
-
-
-// UTILS
-function switchView(id) {
-    document.querySelectorAll('.view-screen').forEach(s => s.style.display = 'none');
-    document.getElementById(id).style.display = 'block';
-    if(id === 'budgetView') renderBudget();
-    if(id === 'taskView') renderTasks();
-    if(id === 'targetView') renderTargets();
-}
-function openModal(id) { document.getElementById(id).style.display = 'flex'; }
-function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-function togglePassword(id) { const el = document.getElementById(id); el.type = el.type === "password" ? "text" : "password"; }
-function openEntryModal(t) { document.getElementById('entType').value = t; openModal('entryModal'); }
-
-function showAlert(m) {
-    const modal = document.getElementById('customAlertModal');
-    document.getElementById('alertTitle').innerText = "Notice";
-    document.getElementById('alertTitle').style.color = "var(--primary)";
-    document.getElementById('alertMessage').innerText = m;
-    
-    document.getElementById('alertActionButtons').innerHTML = `
-        <button onclick="document.getElementById('customAlertModal').style.display='none'" 
-                style="width:100%; background:var(--primary); color:white; padding:12px; border-radius:8px; border:none; font-weight:bold;">
-            OK
-        </button>
-    `;
-    
-    // This forces the modal to use Flexbox and bypasses the 'none' display
-    modal.style.setProperty('display', 'flex', 'important');
-}
-
-async function toggleTheme() {
-    const currentTheme = document.body.getAttribute('data-theme');
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    
-    // Apply the theme to the UI
-    document.body.setAttribute('data-theme', newTheme);
-    
-    // Save the choice in Dexie DB so it persists
-    await db.settings.put({ key: 'theme', value: newTheme });
-}
-
-// --- 1. EXPORT DATA (BACKUP) ---
-async function exportData() {
-    try {
-        // Collect all data from all tables
-        const allData = {
-            entries: await db.entries.toArray(),
-            tasks: await db.tasks.toArray(),
-            targets: await db.targets.toArray(),
-            debts: await db.debts.toArray(),
-            secrets: await db.secrets.toArray(),
-            settings: await db.settings.toArray(),
-            config: await db.config.toArray(),
-            backupDate: new Date().toISOString()
+    document.getElementById('btnSearch').onclick = () => {
+        const q = document.getElementById('searchQuery').value.trim().toLowerCase();
+        if(!q) return;
+        db.transaction("students").objectStore("students").get(q).onsuccess = (e) => {
+            const res = e.target.result;
+            if (res) {
+                const r = document.getElementById('searchResult');
+                r.style.display = "block";
+                r.innerHTML = `<p><strong>${q.toUpperCase()}</strong></p><img src="${res.photo}" class="view-img"><br><button class="btn-blue" onclick="openOptions('${q}','${res.photo}')">Options</button>`;
+            } else { showUI("Record not found."); }
         };
+    };
 
-        const blob = new Blob([JSON.stringify(allData)], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        
-        a.href = url;
-        a.download = `School_Backup_${new Date().toISOString().split('T')[0]}.json`;
-        a.click();
-        
-        showAlert("Backup Downloaded Successfully");
-    } catch (err) {
-        showAlert("Backup Failed: " + err.message);
-    }
-}
-
-// --- 2. IMPORT DATA (RESTORE) ---
-async function importData() {
-    const fileInput = document.getElementById('importFile');
-    if (!fileInput.files[0]) return showAlert("Please select a backup file first");
-
-    showConfirm("This will OVERWRITE all current data with the backup file. Are you sure?", async () => {
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            try {
-                const data = JSON.parse(e.target.result);
-
-                // Clear existing tables and repopulate
-                await Promise.all([
-                    db.entries.clear(),
-                    db.tasks.clear(),
-                    db.targets.clear(),
-                    db.debts.clear(),
-                    db.secrets.clear()
-                ]);
-
-                if (data.entries) await db.entries.bulkAdd(data.entries);
-                if (data.tasks) await db.tasks.bulkAdd(data.tasks);
-                if (data.targets) await db.targets.bulkAdd(data.targets);
-                if (data.debts) await db.debts.bulkAdd(data.debts);
-                if (data.secrets) await db.secrets.bulkAdd(data.secrets);
-
-                showAlert("Data Restored Successfully! Refreshing...");
-                setTimeout(() => location.reload(), 1500);
-            } catch (err) {
-                showAlert("Import Error: " + err.message);
+    function loadGallery() {
+        const g = document.getElementById('galleryGrid'); g.innerHTML = "";
+        db.transaction("students").objectStore("students").openCursor().onsuccess = (e) => {
+            const cur = e.target.result;
+            if (cur) {
+                const n = cur.value.name, p = cur.value.photo;
+                const img = document.createElement('img'); img.src = p; img.className = 'gallery-item';
+                img.onclick = () => {
+                    g.style.display = "none";
+                    const v = document.getElementById('galleryViewer');
+                    v.style.display = "block";
+                    v.innerHTML = `<p><strong>${n.toUpperCase()}</strong></p><img src="${p}" class="view-img"><br><button class="btn-blue" onclick="openOptions('${n}','${p}')">Options</button>`;
+                };
+                g.appendChild(img); cur.continue();
             }
         };
-        reader.readAsText(fileInput.files[0]);
-    });
-}
+    }
 
+    function openOptions(n, p) { activeRecord = { name: n, photo: p }; document.getElementById('menuTitle').innerText = n.toUpperCase(); document.getElementById('optionsMenu').style.display = 'flex'; }
 
-async function handleTrialSystem() {
-    let install = await db.settings.get('install_date');
-    if(!install) { install = { key:'install_date', value: Date.now() }; await db.settings.put(install); }
-    const activated = await db.settings.get('is_activated');
-    if(activated) { document.getElementById('trialBadge').style.display='none'; return; }
-    
-    const diff = Date.now() - install.value;
-    const days = Math.ceil((TRIAL_DAYS*86400000 - diff) / 86400000);
-    if(days <= 0) { document.getElementById('expiryLock').style.display='flex'; document.getElementById('userRequestID').innerText = "ID-"+install.value.toString().slice(-4); }
-    else { document.getElementById('daysLeft').innerText = days; }
-}
-
-// --- NEW & FIXED FUNCTIONS ---
-
-// 1. Task Management
-function openTaskModal() { openModal('taskModal'); }
-async function submitTask() {
-    const title = document.getElementById('taskInTitle').value;
-    const due = document.getElementById('taskInDue').value;
-    const notes = document.getElementById('taskInNotes').value;
-    if(!title) return;
-    await db.tasks.add({ title, dueDate: due, notes, status: 'pending' });
-    closeModal('taskModal');
-    if(document.getElementById('taskView').style.display === 'block') renderTasks();
-    showAlert("Task Added");
-}
-
-// 2. School Targets
-function openTargetModal() { openModal('targetModal'); }
-async function submitTarget() {
-    const title = document.getElementById('targetInTitle').value;
-    const due = document.getElementById('targetInDue').value;
-    if(!title) return;
-    await db.targets.add({ title, dueDate: due, status: 'pending' });
-    closeModal('targetModal');
-    if(document.getElementById('targetView').style.display === 'block') renderTargets();
-    showAlert("Target Set");
-}
-// --- ADMINISTRATIVE TO-DOs (WITH TOGGLE & NOTES) ---
-async function renderTasks() {
-    const tasks = await db.tasks.toArray();
-    const list = document.getElementById('taskList');
-    list.innerHTML = '<h3>Administrative To-do</h3>';
-    
-    list.innerHTML += tasks.map(t => `
-        <div style="background:var(--li); margin-bottom:10px; padding:12px; border-radius:8px; border-left: 5px solid ${t.status === 'completed' ? '#4CAF50' : '#FF9800'}">
-            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                <div>
-                    <strong style="${t.status === 'completed' ? 'text-decoration:line-through; opacity:0.6;' : ''}">${t.title}</strong><br>
-                    <small>📅 Due: ${t.dueDate || 'No date'}</small>
-                </div>
-                <button onclick="toggleTaskStatus(${t.id}, '${t.status}')" 
-                    style="width:auto; padding:4px 10px; font-size:0.7em; background:${t.status === 'completed' ? '#4CAF50' : '#FF9800'}">
-                    ${t.status === 'completed' ? '✓ Done' : '⏳ Pending'}
-                </button>
-            </div>
-            ${t.notes ? `<div style="margin-top:8px; font-size:0.85em; color:var(--text); font-style:italic; background:rgba(0,0,0,0.05); padding:5px; border-radius:4px;">📝 ${t.notes}</div>` : ''}
-            <button onclick="delTask(${t.id})" style="width:auto; background:none; color:red; border:none; padding:0; margin-top:5px; font-size:0.8em; cursor:pointer;">[Delete Task]</button>
-        </div>
-    `).join('') || "<p>No tasks recorded.</p>";
-}
-
-async function toggleTaskStatus(id, currentStatus) {
-    const newStatus = currentStatus === 'pending' ? 'completed' : 'pending';
-    await db.tasks.update(id, { status: newStatus });
-    renderTasks();
-}
-
-// --- TERMLY TARGETS (WITH TOGGLE) ---
-async function renderTargets() {
-    const targets = await db.targets.toArray();
-    const list = document.getElementById('targetList');
-    list.innerHTML = '<h3>School Termly Targets</h3>';
-
-    list.innerHTML += targets.map(t => `
-        <div style="background:var(--card); border:1px solid var(--border); margin-bottom:10px; padding:12px; border-radius:8px;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span style="${t.status === 'completed' ? 'text-decoration:line-through; color:gray;' : 'font-weight:bold;'}">
-                    🎯 ${t.title}
-                </span>
-                <button onclick="toggleTargetStatus(${t.id}, '${t.status}')" 
-                    style="width:auto; padding:4px 10px; font-size:0.7em; background:${t.status === 'completed' ? '#2196F3' : '#607D8B'}">
-                    ${t.status === 'completed' ? 'Achieved' : 'In Progress'}
-                </button>
-            </div>
-            <div style="font-size:0.75em; color:gray; margin-top:5px;">Target Date: ${t.dueDate}</div>
-            <button onclick="delTarget(${t.id})" style="width:auto; background:none; color:red; border:none; padding:0; font-size:0.8em;">[Remove]</button>
-        </div>
-    `).join('') || "<p>No targets set for this term.</p>";
-}
-
-async function toggleTargetStatus(id, currentStatus) {
-    const newStatus = currentStatus === 'pending' ? 'completed' : 'pending';
-    await db.targets.update(id, { status: newStatus });
-    renderTargets();
-}
-
-// --- CENTRALIZED CUSTOM CONFIRMATION ---
-function showConfirm(message, onConfirm) {
-    const modal = document.getElementById('customAlertModal');
-    const title = document.getElementById('alertTitle');
-    const msg = document.getElementById('alertMessage');
-    const btnArea = document.getElementById('alertActionButtons');
-
-    title.innerText = "⚠️ Confirm Deletion";
-    title.style.color = "#f44336";
-    msg.innerText = message;
-
-    btnArea.innerHTML = `
-        <button onclick="document.getElementById('customAlertModal').style.display='none'" 
-                style="background:#ccc; color:black; flex:1;">Cancel</button>
-        <button id="confirmDestructive" style="background:#f44336; color:white; flex:1;">Delete</button>
-    `;
-
-    modal.style.display = 'flex';
-
-    // Set the click action for the delete button
-    document.getElementById('confirmDestructive').onclick = () => {
-        onConfirm();
-        modal.style.display = 'none';
+    document.getElementById('optClose').onclick = () => {
+        document.getElementById('optionsMenu').style.display = 'none';
+        document.getElementById('searchResult').style.display = "none";
+        document.getElementById('galleryViewer').style.display = "none";
+        document.getElementById('galleryGrid').style.display = "grid";
     };
-}
 
-// --- UPDATED DELETE FUNCTIONS ---
+    document.getElementById('optDelete').onclick = async () => {
+        const conf = await showUI("Delete " + activeRecord.name.toUpperCase() + "?", 'confirm');
+        if(conf) {
+            db.transaction("students", "readwrite").objectStore("students").delete(activeRecord.name).oncomplete = () => {
+                updateUI(); document.getElementById('optClose').click(); showUI("Deleted.");
+            };
+        }
+    };
 
-async function delEntry(id) {
-    showConfirm("Are you sure you want to remove this financial record? This will affect your balance.", async () => {
-        await db.entries.delete(id);
-        renderCashBook();
-    });
-}
+    document.getElementById('optRename').onclick = async () => {
+        const newN = await showUI("New name:", 'prompt');
+        if(newN) {
+            const tx = db.transaction("students", "readwrite");
+            const store = tx.objectStore("students");
+            store.delete(activeRecord.name);
+            store.put({ name: newN.toLowerCase(), photo: activeRecord.photo });
+            tx.oncomplete = () => { updateUI(); document.getElementById('optClose').click(); showUI("Renamed!"); };
+        }
+    };
 
-async function delTask(id) {
-    showConfirm("Remove this administrative task from your list?", async () => {
-        await db.tasks.delete(id);
-        renderTasks();
-    });
-}
+    document.getElementById('optDownload').onclick = () => {
+        const a = document.createElement('a'); a.href = activeRecord.photo;
+        a.download = activeRecord.name + ".jpg"; a.click();
+    };
 
-async function delTarget(id) {
-    showConfirm("This will remove the school target permanently. Proceed?", async () => {
-        await db.targets.delete(id);
-        renderTargets();
-    });
-}
+    document.getElementById('optShare').onclick = async () => {
+        try {
+            const blob = await (await fetch(activeRecord.photo)).blob();
+            const file = new File([blob], activeRecord.name + ".jpg", {type:"image/jpeg"});
+            if(navigator.share) await navigator.share({files: [file]});
+        } catch(e) { showUI("Share failed."); }
+    };
 
-async function delSecret(id) {
-    showConfirm("Warning: You are about to delete a stored password/key. This cannot be undone!", async () => {
-        await db.secrets.delete(id);
-        renderSecrets();
-    });
-}
+    // Camera, Save, and Update functions
+    const v = document.getElementById('v');
+    async function startCamera() {
+        try { v.srcObject = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }); } catch(e) { showUI("Camera error."); }
+    }
+    function stopCamera() { if (v.srcObject) v.srcObject.getTracks().forEach(t => t.stop()); }
+    document.getElementById('btnCaptureSave').onclick = () => {
+        const name = document.getElementById('camName').value.trim().toLowerCase();
+        if(!name || !v.srcObject) return showUI("Missing data.");
+        const canvas = document.createElement('canvas');
+        canvas.width = 500; canvas.height = (v.videoHeight/v.videoWidth)*500;
+        canvas.getContext('2d').drawImage(v, 0, 0, canvas.width, canvas.height);
+        saveRecord(name, canvas.toDataURL('image/jpeg', 0.6));
+    };
 
+    document.getElementById('filePicker').onchange = (e) => {
+        const r = new FileReader();
+        r.onload = (ev) => { uploadedData = ev.target.result; document.getElementById('upFileName').innerText = e.target.files[0].name; document.getElementById('btnSaveUpload').style.display='block'; };
+        r.readAsDataURL(e.target.files[0]);
+    };
+    document.getElementById('btnSaveUpload').onclick = () => {
+        const name = document.getElementById('upName').value.trim().toLowerCase();
+        if(name && uploadedData) saveRecord(name, uploadedData);
+    };
 
+    function saveRecord(name, photo) {
+        const tx = db.transaction("students", "readwrite");
+        tx.objectStore("students").put({ name, photo });
+        tx.oncomplete = () => { updateUI(); showScreen('scrMain'); showUI("Saved!"); };
+    }
 
-// 3. Fund Transfers (Contra)
-async function submitContra() {
-    const from = document.getElementById('conFrom').value;
-    const to = document.getElementById('conTo').value;
-    const amt = parseFloat(document.getElementById('conAmt').value);
-    if(!amt || from === to) return showAlert("Invalid Transfer");
+    document.getElementById('btnExport').onclick = () => {
+        db.transaction("students").objectStore("students").getAll().onsuccess = (e) => {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([JSON.stringify(e.target.result)], {type:"application/json"}));
+            a.download = "Backup.json"; a.click();
+        };
+    };
+
+    function updateUI() {
+        if(!db) return;
+        let count = 0; const list = document.getElementById('nameList'); list.innerHTML = "";
+        db.transaction("students").objectStore("students").openCursor().onsuccess = (e) => {
+            const cur = e.target.result;
+            if (cur) { count++; let o = document.createElement('option'); o.value = cur.value.name; list.appendChild(o); cur.continue(); }
+            document.getElementById('dbCount').innerText = `Records: ${count}`;
+        };
+    }
     
-    await db.entries.add({ desc: `Transfer: ${from} to ${to}`, a: amt, cat: 'Transfer', t: 'expense', account: from, d: new Date().toISOString().split('T')[0] });
-    await db.entries.add({ desc: `Transfer: ${from} to ${to}`, a: amt, cat: 'Transfer', t: 'income', account: to, d: new Date().toISOString().split('T')[0] });
-    
-    closeModal('contraModal');
-    renderCashBook();
-    showAlert("Transfer Complete");
-}
-
-
-
-async function checkUnlockCode() {
-    if(document.getElementById('unlockCodeInput').value === ACTIVATION_CODE) {
-        await db.settings.put({key:'is_activated', value:true});
-        location.reload();
-    } else { showAlert("Wrong Code"); }
-}
-
-async function saveSettings() {
-    settings.name = document.getElementById('setBizName').value;
-    const np = document.getElementById('newPass').value;
-    if(np) { security.p = np; await db.config.put({key:'security', val:security}); }
-    await db.config.put({key:'settings', val:settings});
-    location.reload();
-}
-
-function applySettingsUI() { document.getElementById('dispName').innerText = settings.name; }
-function doLogout() { location.reload(); }
-
-initApp();
-</script>
-<script>
+    // --- SERVICE WORKER REGISTRATION ---
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then(reg => console.log('Service Worker registered!'))
-      .catch(err => console.log('Registration failed: ', err));
-  });
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('Service Worker registered'))
+            .catch(err => console.log('Service Worker registration failed', err));
+    });
 }
-    </script>
-    
 
+</script>
 </body>
 </html>
+
