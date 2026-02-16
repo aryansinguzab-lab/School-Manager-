@@ -1,7 +1,7 @@
 const CACHE_NAME = 'biz-registry-v1';
 const ASSETS_TO_CACHE = [
   './',
-  './index.html',
+  './Index.html',
   './manifest.json'
 ];
 
