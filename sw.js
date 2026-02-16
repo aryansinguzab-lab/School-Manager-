@@ -1,48 +1,40 @@
-const CACHE_NAME = 'biz-registry-v1';
+const CACHE_NAME = 'biz-registry-v6';
+// List every file you want to work offline
 const ASSETS_TO_CACHE = [
-  './',
-  './Index.html',
-  './manifest.json'
-  './icon2.png'
-  './index.js'
+  './Index.html',    // Capitalized to match your file
+  './manifest.json',
+  './icon2.png'      // Your phone's icon image
 ];
 
-// 1. Install Event: Save the UI shell to the cache
+// Install: Save files to the browser's "Vault"
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('SW: Caching App Shell');
+      console.log('SW: Caching assets');
       return cache.addAll(ASSETS_TO_CACHE);
     })
   );
-  // Forces the waiting service worker to become the active service worker.
   self.skipWaiting();
 });
 
-// 2. Activate Event: Clean up old versions of the cache
+// Activate: Delete old caches when you update the version
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            console.log('SW: Clearing Old Cache');
-            return caches.delete(cache);
-          }
-        })
-      );
+    caches.keys().then((keys) => {
+      return Promise.all(keys.map((key) => {
+        if (key !== CACHE_NAME) return caches.delete(key);
+      }));
     })
   );
-  return self.clients.claim();
+  self.clients.claim();
 });
 
-// 3. Fetch Event: Cache-First Strategy
-// This ensures the app loads instantly from cache, even without internet.
+// Fetch: Intercept network requests
 self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      // Return the cached version if it exists, otherwise fetch from network
-      return cachedResponse || fetch(event.request);
+    caches.match(event.request).then((response) => {
+      // Return cached file if found, otherwise go to internet
+      return response || fetch(event.request);
     })
   );
 });
